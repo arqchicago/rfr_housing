@@ -1,0 +1,3 @@
+best parameters = rfr__n_estimators=500, rfr__min_samples_split=20, rfr__min_samples_leaf=3, rfr__max_features=0.5, rfr__max_depth=50, rfr__bootstrap=False
+rmse:  (train=66128.0)  (test=95083.0)
+rmae:  (train=226.0)  (test=274.0)
