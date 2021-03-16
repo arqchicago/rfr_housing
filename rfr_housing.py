@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import sklearn.model_selection as skms
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import make_scorer
+from sklearn.metrics import make_scorer, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -68,6 +68,7 @@ def get_rmse_pctl(y_true, y_pred, weight, var, var_dict):
 
 if __name__ == '__main__':
 
+    seed = 5941
     #----  features and target variable
     quant_features = ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'grade', 'age', 'appliance_age', 'crime', 'renovated'] 
     cat_features = ['backyard', 'view', 'condition']    
@@ -89,7 +90,7 @@ if __name__ == '__main__':
 
     #----  train/test split
     X, y = heart_df[features], heart_df[target_var]
-    X_train, X_test, y_train, y_test = skms.train_test_split(X, y, test_size=0.20)
+    X_train, X_test, y_train, y_test = skms.train_test_split(X, y, test_size=0.20, random_state = seed)
 
     X_train_rows, y_train_rows = X_train.shape[0], y_train.shape[0]
     X_test_rows, y_test_rows = X_test.shape[0], y_test.shape[0]
@@ -103,6 +104,7 @@ if __name__ == '__main__':
         
       
     X_train_weights = heart_df[weight].loc[X_train.index.values]
+    X_test_weights = heart_df[weight].loc[X_test.index.values]
     #X_train_sqft = heart_df[sqft].loc[X_train.index.values]
     #X_train_target_var = heart_df[target_var].loc[X_train.index.values]
 
@@ -137,7 +139,7 @@ if __name__ == '__main__':
                                             verbose = 10, 
                                             scoring = scorers,
                                             refit = 'rmse',
-                                            random_state = 42, 
+                                            random_state = seed, 
                                             n_jobs = 4)
 
     optimized_rfr.fit(X_train, y_train, **{'rfr__sample_weight': X_train_weights.values.ravel()})
@@ -147,16 +149,19 @@ if __name__ == '__main__':
     y_train_pred = optimized_rfr.predict(X_train)
     rmse_train = round(rmse(y_train, y_train_pred, heart_df, weight), 0)
     rmae_train = round(rmae(y_train, y_train_pred, heart_df, weight), 0)
+    r2_train = round(r2_score(y_train, y_train_pred, X_train_weights), 4)
 
     y_test_pred = optimized_rfr.predict(X_test)
     rmse_test = round(rmse(y_test, y_test_pred, heart_df, weight), 0)
     rmae_test = round(rmae(y_test, y_test_pred, heart_df, weight), 0)
+    r2_test = round(r2_score(y_test, y_test_pred, X_test_weights), 4)
 
 
     print('> evaluation metrics \n')
     print('%-10s %20s %10s' % ('metric','training','testing'))
     print('%-10s %20s %10s' % ('rmse', rmse_train, rmse_test))
     print('%-10s %20s %10s' % ('rmae', rmae_train, rmae_test))
+    print('%-10s %20s %10s' % ('r2', r2_train, r2_test))
     print('\n')
 
 
