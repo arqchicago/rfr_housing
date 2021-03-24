@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import make_scorer, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-
+import matplotlib.pyplot as plt
 
 def rmse(y_true, y_pred, data_df, weight_var_name=''):
     # returns root mean squared error
@@ -134,7 +134,7 @@ if __name__ == '__main__':
 
     optimized_rfr = skms.RandomizedSearchCV(pipe, 
                                             param_distributions=random_grid, 
-                                            n_iter = 25, 
+                                            n_iter = 50, 
                                             cv = 5, 
                                             verbose = 10, 
                                             scoring = scorers,
@@ -165,6 +165,18 @@ if __name__ == '__main__':
     print('\n')
 
 
+    #----  getting feature importance
+    optimized_rfr_importance = optimized_rfr.best_estimator_.named_steps['rfr'].feature_importances_
+    indices = np.argsort(-1*optimized_rfr_importance)
+    rfr_feature_imp_df = pd.DataFrame(optimized_rfr_importance, index=X_train.columns, columns=['importance'])
+    rfr_feature_imp_df.sort_values(by='importance', ascending=False, inplace=True)
+
+    # summarize feature importance
+    print('> feature importance')
+
+    for i in indices:
+        print('%-8s %-20s' % (round(optimized_rfr_importance[i], 4), f'({features[i]})'))
+        
     #----  obtaining results of the grid run
     cv_results = optimized_rfr.cv_results_
     cv_results_df = pd.DataFrame(cv_results)
@@ -188,3 +200,21 @@ if __name__ == '__main__':
         file.write('best parameters = '+best_params_str+'\n')
         file.write('rmse:  '+'(train='+str(rmse_train)+')  (test='+str(rmse_test)+')'+'\n')
         file.write('rmae:  '+'(train='+str(rmae_train)+')  (test='+str(rmae_test)+')'+'\n')
+
+
+    # feature importance plot
+    plt.style.use('seaborn')
+    fig, ax = plt.subplots()
+    ax.barh(range(len(indices)), optimized_rfr_importance[indices], align='center')
+    ax.set_yticks(range(len(indices)))
+    ax.set_yticklabels([features[i] for i in indices], fontsize=10)
+    ax.invert_yaxis()
+    ax.set_title('Feature Importances', fontsize=22, fontweight='bold')
+    ax.set_xlabel('Relative Importance', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Features', fontsize=10, fontweight='bold')
+    ax.spines['left'].set_color('black')
+    ax.spines['left'].set_linewidth(2)
+    ax.spines['bottom'].set_color('black')
+    ax.spines['bottom'].set_linewidth(2)
+    ax.grid(True)
+    fig.savefig('output/feature_importance_plot.png')
