@@ -6,7 +6,7 @@ feet area of the living area, square feet area of the lot, number of bedrooms, n
 since last major renovation and grade condition of the home.  
 
 ## Blog 
-My blog on this project can be accessed at https://rfrhousing1.blogspot.com/2021/05/random-forest-model-with-feature.html
+My blog on this project can be accessed at https://mlai1.blogspot.com/2021/05/random-forest-model-with-feature.html
 
 ## Cross Validation
 5-fold cross validation is used to avoid overfitting and to collect model evaluation metrics. In 5-fold cross validation, the training set is split
